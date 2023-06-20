@@ -16,7 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class DataBaseManager implements Serializable {
-    private final String URL = "jdbc:postgresql://localhost:5431/studs";
+    private final String URL = "jdbc:postgresql://localhost:5432/studs";
 
     private String login = "s367140";
     private String password = "eBNuRjEouV14Z1uN";

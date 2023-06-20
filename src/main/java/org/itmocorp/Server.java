@@ -31,16 +31,12 @@ import java.util.logging.Logger;
  * @author Alexey Volkov, P3113
  */
 public class Server {
-
-    private static Logger LoggerFactory;
-    private static final Logger logger = LoggerFactory.getLogger(Server.class.getName());
     private DatagramChannel datagramChannel; // канал для обмена информацией
     private SocketAddress socketAddress; // адрес определенного сокета
     private AbstractCommand command = null;
     private String[] args;
 
     private static Date creationDate; // дата, пускай будет на всякий
-
 
     private DataBaseManager dataBaseManager = new DataBaseManager();
 
@@ -190,10 +186,6 @@ public class Server {
     }
 
     public void run() {
-
-        if (args.length == 0) {
-            System.out.println("Не был указан файл");
-        } else {
             //String filePath = args[0];
             //String fileSeparator = ",";
             //CollectionManager collectionManager1 = new CollectionManager(filePath, fileSeparator);
@@ -217,7 +209,7 @@ public class Server {
             while (true) {
                 new Thread(this::receive).start();
             }
-        }
+
     }
 
     public void setArgs(String[] args) {
