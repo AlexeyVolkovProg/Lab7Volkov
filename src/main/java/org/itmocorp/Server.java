@@ -6,7 +6,9 @@ import org.itmocorp.controller.managers.CommandManager;
 import org.itmocorp.model.data.Product;
 import org.itmocorp.model.managers.CollectionManager;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.PushbackInputStream;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -39,6 +41,9 @@ public class Server {
 
     private static Date creationDate; // дата, пускай будет на всякий
 
+
+    private DataBaseManager dataBaseManager = new DataBaseManager();
+
     private static int port = 1555;
 
     // Создание ThreadPool'ов
@@ -61,29 +66,42 @@ public class Server {
      * Метод receive позволяет получать и обрабатывать сообщения от клиента
      */
     private void receive() {
+        ByteBuffer byteBuffer = ByteBuffer.allocate(1000);
+        byteBuffer.clear();
+        SocketAddress socketAddress1;
         try {
-            ByteBuffer byteBuffer = ByteBuffer.allocate(1000);
-            byteBuffer.clear();
-            SocketAddress socketAddress1 = datagramChannel.receive(byteBuffer);  // получаем адрес сокета, с которого была получена информация, null в случае если нет доступных данных для чтения
-            byteBuffer.flip();   // переключаем buffer в режим записи
+            socketAddress1 = datagramChannel.receive(byteBuffer);  // получаем адрес сокета, с которого была получена информация, null в случае если нет доступных данных для чтения
+        } catch (IOException e) {
+            socketAddress1 = null;
+        }
+        byteBuffer.flip();   // переключаем buffer в режим записи
 
-            if (socketAddress1 != null) {
-                Object object = new Serialization().DeserializeObject(byteBuffer.array()); // пытаемся десериализовать полученную команду
+        if (socketAddress1 != null) {
+            try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteBuffer.array());
+                 ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream)) {
+                String login = objectInputStream.readUTF();
+                String password = objectInputStream.readUTF();
+                Object object = objectInputStream.readObject();
                 if (object == null) {
                     //Получена несуществующая команда
                     datagramChannel.send(ByteBuffer.wrap("Команда была не найдена или же вы ввели неверное кол-во аргументов. Введите help для просмотра команд".getBytes()), socketAddress1);
                     datagramChannel.send(ByteBuffer.wrap("Конец ввода".getBytes()), socketAddress1);
                     return;
                 }
-                if (!object.getClass().getName().contains(".Product")) {
+                if (object.getClass().getName().contains(".Login"))
+                    authorization("login", login, password, socketAddress1);
+                else if (object.getClass().getName().contains(".Register"))
+                    authorization("register", login, password, socketAddress1);
+                else if (!object.getClass().getName().contains(".Product")) {
                     command = (AbstractCommand) object;
                     System.out.println(" Сервер получил команду: " + command.getName());
                     if (!command.isNeedObjectToExecute()) {
                         //Команда не требует объекта для выполнения. Начинаем выполнение
+                        SocketAddress finalSocketAddress = socketAddress1;
                         requestProcessingPool.submit(() -> {
                             CommandManager CM = new CommandManager();
                             try {
-                                CM.ExecuteCommand(command, datagramChannel, socketAddress1);
+                                CM.ExecuteCommand(command, datagramChannel, finalSocketAddress);
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
@@ -92,18 +110,46 @@ public class Server {
                 } else if (command != null) {
                     Product product = new Product((Product) object);
                     command.setProduct(product);
+                    SocketAddress finalSocketAddress1 = socketAddress1;
                     requestProcessingPool.submit(() -> {
                         CommandManager CM = new CommandManager();
                         try {
-                            CM.ExecuteCommand(command, datagramChannel, socketAddress1);
+                            CM.ExecuteCommand(command, datagramChannel, finalSocketAddress1);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
                     });
                 }
+            } catch (IOException | ClassNotFoundException e) {
+                throw new RuntimeException(e);
             }
-        } catch (IOException e) {
+        }
+    }
 
+
+    /**
+     * Авторизация пользователя
+     *
+     * @param message  вид авторизации
+     * @param login    логин
+     * @param password пароль
+     * @throws IOException исключение
+     */
+    private void authorization(String message, String login, String password, SocketAddress socketAddress) throws IOException {
+        if (message.equals("login")) {
+            //logger.info("Команда входа в систему определена");
+            if (dataBaseManager.login(login, password)) {
+                datagramChannel.send(ByteBuffer.wrap("Пользователь успешно вошёл в систему.".getBytes()), socketAddress);
+
+            } else datagramChannel.send(ByteBuffer.wrap("Не удалось войти в систему.".getBytes()), socketAddress);
+        }
+        if (message.equals("register")) {
+            //logger.info("Команда регистрации в системе определена");
+
+            if (dataBaseManager.addUser(login, password))
+                datagramChannel.send(ByteBuffer.wrap("Пользователь добавлен. Войдите в систему.".getBytes()), socketAddress);
+            else
+                datagramChannel.send(ByteBuffer.wrap("Не удалось добавить пользователя. Логин занят, содержит недопустимые символы или их последовательность. Мне наплевать, если честно, сами гуглите, какой логин и пароль захавает чёртов postgresql".getBytes()), socketAddress);
         }
     }
 

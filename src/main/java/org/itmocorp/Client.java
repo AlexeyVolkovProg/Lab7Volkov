@@ -2,6 +2,8 @@ package org.itmocorp;
 
 
 import org.itmocorp.controller.commands.AbstractCommand;
+import org.itmocorp.controller.commands.Login;
+import org.itmocorp.controller.commands.Register;
 import org.itmocorp.controller.commands.Save;
 import org.itmocorp.controller.handlers.InputHandler;
 import org.itmocorp.controller.handlers.ScriptHandler;
@@ -26,7 +28,7 @@ import java.util.Scanner;
  *
  * @author Alexey Volkov P3113
  */
-public class Client  {
+public class Client {
     private static DatagramChannel datagramChannel;
     private static SocketAddress socketAddress;
     private final Selector selector;
@@ -35,6 +37,11 @@ public class Client  {
     ArrayList<Product> arrayListPr = new ArrayList<>();
 
     public CommandManager CM = new CommandManager();
+
+    private boolean auth = false;
+
+    private String login = "";
+    private String password = "";
 
 
     public Client() throws IOException {
@@ -98,8 +105,8 @@ public class Client  {
      * @throws IOException IOException
      */
 
-    public static void sendCommand(AbstractCommand command) throws IOException {
-        ByteBuffer buffer = ByteBuffer.wrap(new Serialization().SerializeObject(command));
+    public void sendCommand(AbstractCommand command) throws IOException {
+        ByteBuffer buffer = ByteBuffer.wrap(new Serialization().SerializeObject(command, login, password));
         datagramChannel.send(buffer, socketAddress);
         if (command != null)
             if (command.getClass().getName().contains("Exit"))
@@ -113,15 +120,14 @@ public class Client  {
      * @param product объект класса Product
      * @throws IOException IOException
      */
-    public static void sendProduct(Product product) throws IOException {
-        ByteBuffer buffer = ByteBuffer.wrap(new Serialization().SerializeObject(product));
+    public void sendProduct(Product product) throws IOException {
+        ByteBuffer buffer = ByteBuffer.wrap(new Serialization().SerializeObject(product, login, password));
         datagramChannel.send(buffer, socketAddress);
     }
 
 
     /**
      * Метод для добавления команд в очередь
-     *
      */
     public void addCommand(AbstractCommand command) {
         arrayList.add(command);
@@ -129,7 +135,6 @@ public class Client  {
 
     /**
      * Метод для добавления продуктов в очередь
-     *
      */
     public void addProduct(Product product) {
         arrayListPr.add(product);
@@ -138,6 +143,8 @@ public class Client  {
     public void run() {
         try {
             Scanner scanner = new Scanner(System.in);
+            while (!auth)
+                authorization(scanner);
             datagramChannel.register(selector, SelectionKey.OP_WRITE);
             while (selector.select(15000) > 0) {
                 Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
@@ -193,5 +200,75 @@ public class Client  {
         arrayList.clear();
         arrayListPr.clear();
         run();
+    }
+
+    private void authorization(Scanner scanner) {
+        try {
+            String input;
+            do {
+                System.out.println("Если вы уже зарегистрированы, введите login для входа, иначе введите register");
+                input = scanner.nextLine().trim().split("\\s+")[0];
+            } while (!input.equals("register") & !input.equals("login"));
+            if (input.equals("register"))
+                register(scanner);
+            else
+                login(scanner);
+            String answer = "";
+            while (answer.isEmpty()) {
+                answer = receiveAnswer();
+                if (answer.equals("Пользователь успешно вошёл в систему."))
+                    auth = true;
+            }
+            System.out.println(answer);
+        } catch (Exception e) {
+            System.err.println("Ошибка авторизации");
+        }
+    }
+
+    /**
+     * Регаемся
+     *
+     * @param scanner сканер для ввода данных пользователем
+     * @throws IOException
+     */
+    private void register(Scanner scanner) throws IOException {
+        login = "";
+        boolean lessThen4 = true;
+        boolean withSpaces = true;
+        boolean invalidChars = true;
+        do {
+            System.out.println("Придумайте логин, содержащий не менее 4 символов (допускается использование только английских прописных букв и цифр) ");
+            login = scanner.nextLine();
+            lessThen4 = login.trim().split("\\s+")[0].length() < 4;
+            withSpaces = login.trim().split("\\s+").length != 1;
+            invalidChars = !login.trim().split("\\s+")[0].matches("[a-z0-9]+");
+        } while (lessThen4 || withSpaces || invalidChars);
+        password = "";
+        lessThen4 = true;
+        withSpaces = true;
+        invalidChars = true;
+        do {
+            System.out.println("Придумайте пароль, содержащий не менее 4 (допускается использование только английских прописных букв и цифр)");
+            password = scanner.nextLine();
+            lessThen4 = password.trim().split("\\s+")[0].length() < 4;
+            withSpaces = password.trim().split("\\s+").length != 1;
+            invalidChars = !password.trim().split("\\s+")[0].matches("[a-z0-9]+");
+        } while (lessThen4 || withSpaces || invalidChars);
+        System.out.println("Ваш логин: " + login.trim().split("\\s+")[0] + "\nВаш пароль: " + password.trim().split("\\s+")[0]);
+        sendCommand(new Register());
+    }
+
+    /**
+     * Логинимся
+     *
+     * @param scanner сканер для ввода данных пользователем
+     * @throws IOException
+     */
+    private void login(Scanner scanner) throws IOException {
+        System.out.print("Введите логин: ");
+        login = scanner.nextLine();
+        System.out.print("Введите пароль: ");
+        password = scanner.nextLine();
+        sendCommand(new Login());
     }
 }
