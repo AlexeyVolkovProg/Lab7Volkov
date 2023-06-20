@@ -24,6 +24,16 @@ public class Product implements Comparable<Product>, Serializable {
     private UnitOfMeasure unitOfMeasure; //Поле не может быть null
     private Person owner; //Поле может быть null
 
+    private String login;
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
     /**
      * Конструктор класса Product
      *
@@ -35,6 +45,17 @@ public class Product implements Comparable<Product>, Serializable {
      * @param owner           владелец товара
      */
 
+    public Product(int id, ZonedDateTime zonedDateTime, String name, Coordinates coordinates, Long price, Long manufactureCost, UnitOfMeasure unitOfMeasure, Person owner, String login) {
+        this.creationDate = zonedDateTime;//ZonedDateTime.now();
+        setId(id);
+        setName(name);
+        setCoordinates(coordinates);
+        setPrice(price);
+        setManufactureCost(manufactureCost);
+        setUnitOfMeasure(unitOfMeasure);
+        setOwner(owner);
+        setLogin(login);
+    }
     public Product(String name, Coordinates coordinates, Long price, Long manufactureCost, UnitOfMeasure unitOfMeasure, Person owner) {
         this.creationDate = ZonedDateTime.now();
         setId(idSetter++);
@@ -61,6 +82,7 @@ public class Product implements Comparable<Product>, Serializable {
         setManufactureCost(product.getManufactureCost());
         setUnitOfMeasure(product.getUnitOfMeasure());
         setOwner(product.getOwner());
+        setLogin(product.getLogin());
     }
 
     /**
@@ -147,6 +169,7 @@ public class Product implements Comparable<Product>, Serializable {
                 ", manufactureCost=" + manufactureCost +
                 ", unitOfMeasure=" + unitOfMeasure +
                 ", owner=" + owner +
+                ", login='" + login + '\'' +
                 '}';
     }
 
@@ -219,5 +242,9 @@ public class Product implements Comparable<Product>, Serializable {
     @Override
     public int compareTo(Product anotherProduct) {
         return this.price.compareTo(anotherProduct.price);
+    }
+
+    public static void setIdSetter(int idSetter) {
+        Product.idSetter = idSetter;
     }
 }

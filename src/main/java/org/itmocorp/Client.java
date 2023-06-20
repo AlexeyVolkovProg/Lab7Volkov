@@ -137,6 +137,7 @@ public class Client {
      * Метод для добавления продуктов в очередь
      */
     public void addProduct(Product product) {
+        product.setLogin(login);
         arrayListPr.add(product);
     }
 

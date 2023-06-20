@@ -4,7 +4,7 @@ import org.itmocorp.controller.managers.CommandManager;
 
 
 public class RemoveById extends AbstractCommand {
-    public RemoveById(){
+    public RemoveById() {
         name = "removeById";
         help = "Удалить элемент из коллекции по его id";
     }
@@ -38,19 +38,16 @@ public class RemoveById extends AbstractCommand {
         } else {
             CM.printToClient("Была вызвана команда RemoveById");
             int id = Integer.parseInt(args[0]);
-            if (id < CommandManager.collection.size() && id >= 0) {
-                CommandManager.collection.stream()
-                        .filter(item -> item.getId() == id)
-                        .findFirst()
-                        .ifPresentOrElse(item -> {
-                            CommandManager.collection.remove(item);
-                            CM.printToClient("Элемент c id " + id + " был успешно удален");
-                        }, () -> {
-                            CM.printToClient("Элемента по данному id в коллекции нет, поэтому удалить его не получится.");
-                        });
-            } else {
-                CM.printToClient("Элемента по данному id в коллекции нет, поэтому удалить его не получится.");
-            }
+            CommandManager.collection.stream()
+                    .filter(item -> item.getId() == id && item.getLogin().equals(CM.getLogin()))
+                    .findFirst()
+                    .ifPresentOrElse(item -> {
+                        CommandManager.collection.remove(item);
+                        CM.printToClient("Элемент c id " + id + " был успешно удален");
+                    }, () -> {
+                        CM.printToClient("Удалить данный элемент не получится. Проверьте свои права и существование данного элемента");
+                    });
+
             CM.printToClient("Команда RemoveById закончила выполнение.");
         }
     }

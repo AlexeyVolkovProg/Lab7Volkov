@@ -58,25 +58,25 @@ public class UpdateId extends AbstractCommand {
             if (id < CommandManager.collection.size() && id >= 0) {
                 if (!CM.isScriptStatus()) {
                     CommandManager.collection.stream()
-                            .filter(item -> item.getId() == id)
+                            .filter(item -> item.getId() == id && item.getLogin().equals(CM.getLogin()))
                             .findFirst()
                             .ifPresentOrElse(item -> {
                                 CommandManager.collection.set(CommandManager.collection.indexOf(item), InputHandler.ArgumentsReader());
                                 CM.printToClient("Элемент c id " + id + " успешно изменен");
                             }, () -> {
-                                CM.printToClient("Элемента по данному id в коллекции нет, поэтому обновить его не получится.");
+                                CM.printToClient("Элемента по данному id в коллекции нет или проверьте права доступа к этому элементу");
                             });
                 } else {
                     Product product = ScriptHandler.getProductFromFile();
                     if (product != null) {
                         CommandManager.collection.stream()
-                                .filter(item -> item.getId() == id)
+                                .filter(item -> item.getId() == id && item.getLogin().equals(CM.getLogin()))
                                 .findFirst()
                                 .ifPresentOrElse(item -> {
                                     CommandManager.collection.set(CommandManager.collection.indexOf(item), product);
                                     CM.printToClient("Элемент c id " + id + " успешно изменен");
                                 }, () -> {
-                                    CM.printToClient("Элемента по данному id в коллекции нет, поэтому обновить его не получится.");
+                                    CM.printToClient("Элемента по данному id в коллекции нет или проверьте права доступа к этому элементу");
                                 });
                     }
                 }

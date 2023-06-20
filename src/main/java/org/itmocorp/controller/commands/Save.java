@@ -1,7 +1,8 @@
 package org.itmocorp.controller.commands;
 
+import org.itmocorp.DataBaseManager;
 import org.itmocorp.controller.managers.CommandManager;
-import org.itmocorp.model.managers.CollectionManager;
+//import org.itmocorp.model.managers.CollectionManager;
 
 public class Save extends AbstractCommand{
     public Save(){
@@ -13,7 +14,8 @@ public class Save extends AbstractCommand{
     public void execute(CommandManager CM) {
         if (args.length == 0){
             System.out.println("Команда Save начала выполнение");
-            CollectionManager.saveToFile();
+            new DataBaseManager().updateDataBase();
+            //CollectionManager.saveToFile();
             System.out.println("Команда Save закончила выполнение");
         }else{
             System.out.println("Данная команда не принимает аргументы");

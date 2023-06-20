@@ -4,7 +4,7 @@ import org.itmocorp.controller.commands.AbstractCommand;
 import org.itmocorp.controller.commands.Save;
 import org.itmocorp.controller.managers.CommandManager;
 import org.itmocorp.model.data.Product;
-import org.itmocorp.model.managers.CollectionManager;
+//import org.itmocorp.model.managers.CollectionManager;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -93,6 +93,12 @@ public class Server {
                 else if (object.getClass().getName().contains(".Register"))
                     authorization("register", login, password, socketAddress1);
                 else if (!object.getClass().getName().contains(".Product")) {
+                    if (!dataBaseManager.login(login, password)) {
+                        datagramChannel.send(ByteBuffer.wrap("Авторизация не прошла, команды не будут выполнены".getBytes()), socketAddress1);
+                        datagramChannel.send(ByteBuffer.wrap("Конец ввода".getBytes()), socketAddress1);
+                        return;
+                    }
+
                     command = (AbstractCommand) object;
                     System.out.println(" Сервер получил команду: " + command.getName());
                     if (!command.isNeedObjectToExecute()) {
@@ -100,6 +106,7 @@ public class Server {
                         SocketAddress finalSocketAddress = socketAddress1;
                         requestProcessingPool.submit(() -> {
                             CommandManager CM = new CommandManager();
+                            CM.setLogin(login);
                             try {
                                 CM.ExecuteCommand(command, datagramChannel, finalSocketAddress);
                             } catch (IOException e) {
@@ -109,10 +116,17 @@ public class Server {
                     }
                 } else if (command != null) {
                     Product product = new Product((Product) object);
+                    if (!dataBaseManager.login(login, password)) {
+                        datagramChannel.send(ByteBuffer.wrap("Авторизация не прошла, команды не будут выполнены".getBytes()), socketAddress1);
+                        datagramChannel.send(ByteBuffer.wrap("Конец ввода".getBytes()), socketAddress1);
+                        return;
+                    }
+
                     command.setProduct(product);
                     SocketAddress finalSocketAddress1 = socketAddress1;
                     requestProcessingPool.submit(() -> {
                         CommandManager CM = new CommandManager();
+                        CM.setLogin(login);
                         try {
                             CM.ExecuteCommand(command, datagramChannel, finalSocketAddress1);
                         } catch (IOException e) {
@@ -180,9 +194,9 @@ public class Server {
         if (args.length == 0) {
             System.out.println("Не был указан файл");
         } else {
-            String filePath = args[0];
-            String fileSeparator = ",";
-            CollectionManager collectionManager1 = new CollectionManager(filePath, fileSeparator);
+            //String filePath = args[0];
+            //String fileSeparator = ",";
+            //CollectionManager collectionManager1 = new CollectionManager(filePath, fileSeparator);
             socketAddress = new InetSocketAddress(port);
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 // Код, который нужно выполнить при завершении работы программы
@@ -198,6 +212,7 @@ public class Server {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            dataBaseManager.updateCollectionFromDataBase();
             new Thread(this::checkServerCommand).start();
             while (true) {
                 new Thread(this::receive).start();

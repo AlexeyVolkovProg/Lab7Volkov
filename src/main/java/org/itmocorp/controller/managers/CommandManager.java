@@ -1,10 +1,11 @@
 package org.itmocorp.controller.managers;
 
+import org.itmocorp.DataBaseManager;
 import org.itmocorp.controller.commands.*;
 import org.itmocorp.controller.handlers.InputHandler;
 import org.itmocorp.controller.handlers.ScriptHandler;
 import org.itmocorp.model.data.Product;
-import org.itmocorp.model.managers.CollectionManager;
+//import org.itmocorp.model.managers.CollectionManager;
 
 import java.io.IOException;
 import java.net.SocketAddress;
@@ -18,7 +19,7 @@ public class CommandManager {
     public static Map<String, AbstractCommand> commands = new HashMap<>(); // коллекция, которая содержит все доступные нам команды
 
     // Потокобезопасная коллекция
-    public static CopyOnWriteArrayList<Product> collection = CollectionManager.getProducts(); // коллекция, с которой идет работа
+    public static CopyOnWriteArrayList<Product> collection = new CopyOnWriteArrayList<>(); // коллекция, с которой идет работа
 
     //public CommandManager commandManager = new CommandManager(); // создаем объект класса CommandManager в самом нем
     public static Date collectionTime;
@@ -37,6 +38,16 @@ public class CommandManager {
     }
 
     private static ExecutorService responseSendingPool = Executors.newCachedThreadPool();
+
+    private String login;
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
 
     public CommandManager() {
         collectionTime = new Date();

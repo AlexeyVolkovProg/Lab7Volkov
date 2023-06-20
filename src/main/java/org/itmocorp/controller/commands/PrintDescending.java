@@ -2,7 +2,6 @@ package org.itmocorp.controller.commands;
 
 import org.itmocorp.controller.managers.CommandManager;
 import org.itmocorp.model.data.Product;
-import org.itmocorp.model.managers.CollectionManager;
 
 import java.util.*;
 import java.util.stream.Collectors;
