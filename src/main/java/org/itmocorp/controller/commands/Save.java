@@ -14,8 +14,7 @@ public class Save extends AbstractCommand{
     public void execute(CommandManager CM) {
         if (args.length == 0){
             System.out.println("Команда Save начала выполнение");
-            new DataBaseManager().updateDataBase();
-            //CollectionManager.saveToFile();
+            DataBaseManager.updateDataBase();
             System.out.println("Команда Save закончила выполнение");
         }else{
             System.out.println("Данная команда не принимает аргументы");

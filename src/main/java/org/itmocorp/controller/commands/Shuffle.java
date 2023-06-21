@@ -18,9 +18,11 @@ public class Shuffle extends AbstractCommand{
     @Override
     public void execute(CommandManager CM) {
         if (args.length == 0){
-            CM.printToClient("Команда Shuffle начала выполнение");
-            Collections.shuffle(CommandManager.collection);
-            CM.printToClient("Команда Shuffle закончила выполнение");
+            synchronized (CommandManager.collection) {
+                CM.printToClient("Команда Shuffle начала выполнение");
+                Collections.shuffle(CommandManager.collection);
+                CM.printToClient("Команда Shuffle закончила выполнение");
+            }
         }else{
             CM.printToClient("Данная команда не принимает аргументы");
         }

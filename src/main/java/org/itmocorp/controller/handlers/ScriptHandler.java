@@ -8,10 +8,8 @@ import org.itmocorp.model.parsing.TransformToProduct;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.Scanner;
 
 public class ScriptHandler {
@@ -36,7 +34,7 @@ public class ScriptHandler {
 
                     lineHandler(scannersMap.get(filename).nextLine(), client);
                 }
-                client.CM.setScriptStatus(false);
+                client.commandManager.setScriptStatus(false);
                 System.out.println("Выполнение файла " + file1.getName() + "было окончено.");
             }
         } catch (FileNotFoundException e) {
@@ -58,7 +56,7 @@ public class ScriptHandler {
                 System.out.println("Команда \"" + commandName + "\" не найдена. Введите \"help\" для списка команд.");
             } else {
                 try {
-                    client.CM.setScriptStatus(true);
+                    client.commandManager.setScriptStatus(true);
                     String[] arg;
                     if (!argument.equals("")) {
                         arg = new String[1]; // извиняюсь, за это

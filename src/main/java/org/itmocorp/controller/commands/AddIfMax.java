@@ -19,21 +19,23 @@ public class AddIfMax extends AbstractCommand{
     public void execute(CommandManager CM) {
         CM.printToClient("Была вызвана команда AddIfMax");
         if (args.length == 0) {
-            if (!CM.isScriptStatus()) {
-                Product product = InputHandler.ArgumentsReader();
-                if (product != null && product.compareTo(Collections.max(CommandManager.collection)) > 0) {
-                    CommandManager.collection.add(product);
-                    CM.printToClient("Новый объект был успешно добавлен в вашу коллекцию");
-                }else{
-                    CM.printToClient("Новый объект не был добавлен в коллекцию, так не удалось его сформировать или его значение не превышало значение максимального элемента коллекции");
-                }
-            } else {
-                Product product = ScriptHandler.getProductFromFile();
-                if (product != null && product.compareTo(Collections.max(CommandManager.collection)) > 0) {
-                    CommandManager.collection.add(product);
-                    CM.printToClient("Новый объект был успешно добавлен в вашу коллекцию");
-                }else{
-                    CM.printToClient("Новый объект не был добавлен в коллекцию, так не удалось его сформировать или его значение не превышало значение максимального элемента коллекции");
+            synchronized (CommandManager.collection) {
+                if (!CM.isScriptStatus()) {
+                    Product product = InputHandler.ArgumentsReader();
+                    if (product != null && product.compareTo(Collections.max(CommandManager.collection)) > 0) {
+                        CommandManager.collection.add(product);
+                        CM.printToClient("Новый объект был успешно добавлен в вашу коллекцию");
+                    } else {
+                        CM.printToClient("Новый объект не был добавлен в коллекцию, так не удалось его сформировать или его значение не превышало значение максимального элемента коллекции");
+                    }
+                } else {
+                    Product product = ScriptHandler.getProductFromFile();
+                    if (product != null && product.compareTo(Collections.max(CommandManager.collection)) > 0) {
+                        CommandManager.collection.add(product);
+                        CM.printToClient("Новый объект был успешно добавлен в вашу коллекцию");
+                    } else {
+                        CM.printToClient("Новый объект не был добавлен в коллекцию, так не удалось его сформировать или его значение не превышало значение максимального элемента коллекции");
+                    }
                 }
             }
         }else{

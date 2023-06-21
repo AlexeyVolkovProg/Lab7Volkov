@@ -4,7 +4,6 @@ package org.itmocorp;
 import org.itmocorp.controller.commands.AbstractCommand;
 import org.itmocorp.controller.commands.Login;
 import org.itmocorp.controller.commands.Register;
-import org.itmocorp.controller.commands.Save;
 import org.itmocorp.controller.handlers.InputHandler;
 import org.itmocorp.controller.handlers.ScriptHandler;
 import org.itmocorp.controller.managers.CommandManager;
@@ -32,14 +31,11 @@ public class Client {
     private static DatagramChannel datagramChannel;
     private static SocketAddress socketAddress;
     private final Selector selector;
+    ArrayList<AbstractCommand> arrayList = new ArrayList<>(); // очередь команд
+    ArrayList<Product> arrayListPr = new ArrayList<>(); // очередь отправляющихся объектов Product, для команд
 
-    ArrayList<AbstractCommand> arrayList = new ArrayList<>();
-    ArrayList<Product> arrayListPr = new ArrayList<>();
-
-    public CommandManager CM = new CommandManager();
-
-    private boolean auth = false;
-
+    public CommandManager commandManager = new CommandManager();
+    private boolean auth = false; // флаг, отвечающий за статус авторизации
     private String login = "";
     private String password = "";
 
@@ -106,7 +102,7 @@ public class Client {
      */
 
     public void sendCommand(AbstractCommand command) throws IOException {
-        ByteBuffer buffer = ByteBuffer.wrap(new Serialization().SerializeObject(command, login, password));
+        ByteBuffer buffer = ByteBuffer.wrap(Serialization.SerializeObject(command, login, password));
         datagramChannel.send(buffer, socketAddress);
         if (command != null)
             if (command.getClass().getName().contains("Exit"))
@@ -121,7 +117,7 @@ public class Client {
      * @throws IOException IOException
      */
     public void sendProduct(Product product) throws IOException {
-        ByteBuffer buffer = ByteBuffer.wrap(new Serialization().SerializeObject(product, login, password));
+        ByteBuffer buffer = ByteBuffer.wrap(Serialization.SerializeObject(product, login, password));
         datagramChannel.send(buffer, socketAddress);
     }
 
@@ -144,7 +140,7 @@ public class Client {
     public void run() {
         try {
             Scanner scanner = new Scanner(System.in);
-            while (!auth)
+            while (!auth) // запускаем блок авторизации пользователя
                 authorization(scanner);
             datagramChannel.register(selector, SelectionKey.OP_WRITE);
             while (selector.select(15000) > 0) {
@@ -203,14 +199,32 @@ public class Client {
         run();
     }
 
+
+    /**
+     * Метод отвечающий за авторизацию пользователя
+     *
+     * @param scanner сканнер, привязанный к консоли пользователя
+     */
     private void authorization(Scanner scanner) {
         try {
-            String input;
+            String[] inputStringArray;
+            String inputString = null;
+            boolean authFlag = true;
             do {
                 System.out.println("Если вы уже зарегистрированы, введите login для входа, иначе введите register");
-                input = scanner.nextLine().trim().split("\\s+")[0];
-            } while (!input.equals("register") & !input.equals("login"));
-            if (input.equals("register"))
+                inputStringArray = scanner.nextLine().trim().split("\\s+");
+                if (inputStringArray.length > 1) {
+                    System.out.println("Команда не должна содержать аргументы. Повторите ввод");
+                    authFlag = false;
+                }else if (inputStringArray[0].equals("register") || inputStringArray[0].equals("login")){
+                    inputString = inputStringArray[0];
+                    authFlag = true;
+                }else{
+                    System.out.println("Команда не найдена. Введите register/login");
+                }
+            }
+            while (!authFlag);
+            if (inputString.equals("register"))
                 register(scanner);
             else
                 login(scanner);
@@ -227,16 +241,15 @@ public class Client {
     }
 
     /**
-     * Регаемся
+     * Блок регистрации пользователя
      *
      * @param scanner сканер для ввода данных пользователем
-     * @throws IOException
      */
     private void register(Scanner scanner) throws IOException {
         login = "";
-        boolean lessThen4 = true;
-        boolean withSpaces = true;
-        boolean invalidChars = true;
+        boolean lessThen4;
+        boolean withSpaces;
+        boolean invalidChars;
         do {
             System.out.println("Придумайте логин, содержащий не менее 4 символов (допускается использование только английских прописных букв и цифр) ");
             login = scanner.nextLine();
@@ -245,9 +258,6 @@ public class Client {
             invalidChars = !login.trim().split("\\s+")[0].matches("[a-z0-9]+");
         } while (lessThen4 || withSpaces || invalidChars);
         password = "";
-        lessThen4 = true;
-        withSpaces = true;
-        invalidChars = true;
         do {
             System.out.println("Придумайте пароль, содержащий не менее 4 (допускается использование только английских прописных букв и цифр)");
             password = scanner.nextLine();
@@ -260,10 +270,10 @@ public class Client {
     }
 
     /**
-     * Логинимся
+     * Блок входа пользователя
+     * Отправка команды Login на сервер
      *
      * @param scanner сканер для ввода данных пользователем
-     * @throws IOException
      */
     private void login(Scanner scanner) throws IOException {
         System.out.print("Введите логин: ");

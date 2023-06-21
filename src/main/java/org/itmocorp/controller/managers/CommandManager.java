@@ -1,11 +1,7 @@
 package org.itmocorp.controller.managers;
 
-import org.itmocorp.DataBaseManager;
 import org.itmocorp.controller.commands.*;
-import org.itmocorp.controller.handlers.InputHandler;
-import org.itmocorp.controller.handlers.ScriptHandler;
 import org.itmocorp.model.data.Product;
-//import org.itmocorp.model.managers.CollectionManager;
 
 import java.io.IOException;
 import java.net.SocketAddress;
@@ -19,7 +15,7 @@ public class CommandManager {
     public static Map<String, AbstractCommand> commands = new HashMap<>(); // коллекция, которая содержит все доступные нам команды
 
     // Потокобезопасная коллекция
-    public static CopyOnWriteArrayList<Product> collection = new CopyOnWriteArrayList<>(); // коллекция, с которой идет работа
+    public final static List<Product> collection = new CopyOnWriteArrayList<>(); // коллекция, с которой идет работа
 
     //public CommandManager commandManager = new CommandManager(); // создаем объект класса CommandManager в самом нем
     public static Date collectionTime;

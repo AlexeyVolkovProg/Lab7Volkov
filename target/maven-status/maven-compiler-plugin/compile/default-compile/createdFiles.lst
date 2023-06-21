@@ -23,17 +23,14 @@ org\itmocorp\model\parsing\TransformToProduct.class
 org\itmocorp\controller\validators\InputStringValidator.class
 org\itmocorp\model\data\Person.class
 org\itmocorp\controller\commands\Show.class
-org\itmocorp\model\managers\CollectionManager.class
 org\itmocorp\Server.class
 org\itmocorp\Serialization.class
 org\itmocorp\controller\validators\InputIntegerValidator.class
-org\itmocorp\model\parsing\CSVWriter.class
 org\itmocorp\controller\commands\GroupCountingById.class
 org\itmocorp\model\data\Product.class
 org\itmocorp\controller\commands\Info.class
 org\itmocorp\controller\commands\AbstractCommand.class
 org\itmocorp\controller\managers\CommandManager.class
-org\itmocorp\model\parsing\CSVReader.class
 org\itmocorp\controller\commands\ExecuteScript.class
 org\itmocorp\model\exceptions\StringValueException.class
 org\itmocorp\controller\commands\UpdateId.class

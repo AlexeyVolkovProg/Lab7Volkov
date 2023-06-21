@@ -37,18 +37,23 @@ public class RemoveById extends AbstractCommand {
             CM.printToClient("Для выполнения данной команды требуется аргумент");
         } else {
             CM.printToClient("Была вызвана команда RemoveById");
-            int id = Integer.parseInt(args[0]);
-            CommandManager.collection.stream()
-                    .filter(item -> item.getId() == id && item.getLogin().equals(CM.getLogin()))
-                    .findFirst()
-                    .ifPresentOrElse(item -> {
-                        CommandManager.collection.remove(item);
-                        CM.printToClient("Элемент c id " + id + " был успешно удален");
-                    }, () -> {
-                        CM.printToClient("Удалить данный элемент не получится. Проверьте свои права и существование данного элемента");
-                    });
-
-            CM.printToClient("Команда RemoveById закончила выполнение.");
+            if (args[0].matches("\\d+")) {
+                synchronized (CommandManager.collection) {
+                    int id = Integer.parseInt(args[0]);
+                    CommandManager.collection.stream()
+                            .filter(item -> item.getId() == id && item.getLogin().equals(CM.getLogin()))
+                            .findFirst()
+                            .ifPresentOrElse(item -> {
+                                CommandManager.collection.remove(item);
+                                CM.printToClient("Элемент c id " + id + " был успешно удален");
+                            }, () -> {
+                                CM.printToClient("Удалить данный элемент не получится. Проверьте свои права и существование данного элемента");
+                            });
+                }
+            }
+            else {
+                CM.printToClient("Аргумент не является числом");
+            }
         }
     }
 }
